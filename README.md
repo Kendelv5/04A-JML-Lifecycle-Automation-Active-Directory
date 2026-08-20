@@ -1,59 +1,53 @@
-# Lab 04: JML Lifecycle Automation (Joiner-Mover-Leaver)
+# Lab 04a: On-Premises JML Lifecycle Automation (Active Directory)
 
 ## 🎯 Objective
-Automate identity lifecycle transitions (Joiner, Mover, Leaver) using Okta group rules and attribute expressions to eliminate manual provisioning delays, prevent privilege creep, and secure offboarding.
+Design and implement an automated Joiner-Mover-Leaver (JML) lifecycle workflow utilizing Windows Server Active Directory, Organizational Units (OUs), security groups, and automated identity management structures to mitigate insider threats and eliminate manual provisioning overhead.
 
 ---
 
 ## 🏗️ Architecture & Scenario
-In a mid-to-large enterprise, managing employee status changes manually creates human error, orphaned accounts, and security vulnerabilities. This lab models a full employment lifecycle:
-1. **The Joiner:** A new hire enters the HR system/directory, automatically receiving baseline permissions based on their department.
-2. **The Mover:** An employee changes departments (e.g., from Sales to Engineering), requiring an automated swap of group memberships and application entitlements.
-3. **The Leaver:** An employee departs, triggering instant account deactivation, session revocation, and license reclamation.
+In traditional enterprise environments, managing identity lifecycles manually via Active Directory introduces severe risks, including orphaned accounts, privilege creep, and human error during role changes. This lab models a robust on-premises JML framework:
+1. **The Joiner:** Automated onboarding where new employee accounts are provisioned into designated Departmental OUs with baseline security group memberships.
+2. **The Mover:** Internal role changes where an employee's account is moved between OUs (e.g., from Sales to Engineering), automatically stripping legacy access and binding new permissions.
+3. **The Leaver:** Secure offboarding that triggers immediate account disablement, relocation to an isolated "Terminated" OU, and stripping of all active group memberships.
 
 ---
 
 ## ⚙️ Configuration Steps
 
-### 1. Custom Profile Attributes
-* Navigated to **Directory** > **Profile Editor** > **User (default)**.
-* Added custom attributes to simulate HR metadata:
-  * `department` (String)
-  * `employeeStatus` (String: Active, Terminated)
+### 1. OU Structure & Directory Design
+* Configured a hierarchical Active Directory Organizational Unit (OU) structure:
+  * `Corp/Users/Active/`
+    * `Corp/Users/Active/Sales/`
+    * `Corp/Users/Active/Engineering/`
+  * `Corp/Users/Terminated/`
 
-### 2. The "Joiner" Phase (Automated Onboarding)
-* Created a group named `US-Employees-Base`.
-* Built an Okta Expression Language rule to catch new hires:
-  ```text
-  user.employeeStatus == "Active" AND user.department != ""
+### 2. The "Joiner" Phase (Onboarding)
+* Created global security groups for base access: `GG-All-Employees`.
+* Established standard templates for user object creation, ensuring every new hire automatically inherits baseline organizational group memberships.
 
-**###3. The "Mover" Phase (Role Shift)**
-Created department-specific groups: Dept-Sales and Dept-Engineering.
+### 3. The "Mover" Phase (Internal Transfers)
+* Created role-specific groups: `GG-Sales-Dept` and `GG-Engineering-Dept`.
+* Configured group scope and membership rules so that when an employee transitions departments, relocating their user object to the new departmental OU (or updating their group linkage) cleanly revokes legacy resource access while appending the new role's permissions.
 
-Configured dynamic rules using attribute matching so that updating a user's department instantly shifts their group memberships:
+### 4. The "Leaver" Phase (Offboarding & Deactivation)
+* Configured the offboarding SOP:
+  * Right-click the departing user object and select **Disable Account**.
+  * Move the user account object out of the active departmental OU and into the isolated `Corp/Users/Terminated/` OU (which is isolated from Group Policy execution and resource access).
+  * Purge all primary security group memberships (except Domain Users where required by schema).
 
-Sales Rule: user.department == "Sales"
+---
 
-Engineering Rule: user.department == "Engineering"
+## 🧪 Validation & Testing
+* **Scenario A (Joiner Test):** Provisioned a test object within `Sales/`, verifying proper inheritance of baseline groups.
+* **Scenario B (Mover Test):** Migrated the test user object from the `Sales/` OU to the `Engineering/` OU, confirming old group permissions were cleared and new engineering resources became accessible.
+* **Scenario C (Leaver Test):** Disabled and relocated a test account to the `Terminated/` OU, verifying that active Kerberos tickets and session tokens were invalidated and access was instantly cut off.
 
+*(Optional: Insert an anonymized screenshot of your Active Directory Users and Computers OU hierarchy here)*
+> `[Insert Screenshot: ADUC OU Structure]`
 
-**###4. The "Leaver" Phase (Offboarding)**
-Configured sign-on and lifecycle policies to handle status changes to Terminated.
+---
 
-Tested immediate session invalidation and account suspension.
-
-🧪 Validation & Testing
-Test Case 1 (Joiner): Provisioned a test user (test.user@lab.local) with employeeStatus = Active and verified instant drop into the base group and app assignment.
-
-Test Case 2 (Mover): Updated the test user's department from Sales to Engineering. Verified that the user automatically lost access to Sales-specific resources and gained Engineering entitlements without manual helpdesk intervention.
-
-Test Case 3 (Leaver): Switched status to Terminated, confirming active tokens were revoked and the account was disabled.
-
-(Optional: Insert an anonymized screenshot of your Okta Group Rule expression builder here)
-
-[Insert Screenshot: Group Rule Expression Editor]
-
-💡 Key Takeaways & Challenges
-Syntax Nuances: Practiced writing clean Okta Expression Language (OEL) strings to handle logical AND operators cleanly without syntax errors.
-
-Security Impact: Automated JML drastically shrinks the "window of exposure" during offboarding and stops privilege creep when employees switch roles internally.
+## 💡 Key Takeaways & Challenges
+* **Directory Structure Hygiene:** Maintained strict OU design to ensure Group Policy Objects (GPOs) and access permissions map seamlessly to changing job functions.
+* **Security Impact:** Structured offboarding via isolated OUs and immediate account disablement drastically closes the exposure window during employee departures.
