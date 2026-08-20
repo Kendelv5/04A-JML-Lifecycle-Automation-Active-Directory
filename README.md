@@ -1,5 +1,3 @@
-# 04-JML-Lifecycle-Automation
-
 # Lab 04: JML Lifecycle Automation (Joiner-Mover-Leaver)
 
 ## 🎯 Objective
