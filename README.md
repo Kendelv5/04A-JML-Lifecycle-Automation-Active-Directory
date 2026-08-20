@@ -43,9 +43,6 @@ In traditional enterprise environments, managing identity lifecycles manually vi
 * **Scenario B (Mover Test):** Migrated the test user object from the `Sales/` OU to the `Engineering/` OU, confirming old group permissions were cleared and new engineering resources became accessible.
 * **Scenario C (Leaver Test):** Disabled and relocated a test account to the `Terminated/` OU, verifying that active Kerberos tickets and session tokens were invalidated and access was instantly cut off.
 
-*(Optional: Insert an anonymized screenshot of your Active Directory Users and Computers OU hierarchy here)*
-> `[Insert Screenshot: ADUC OU Structure]`
-
 ---
 
 ## 💡 Key Takeaways & Challenges
