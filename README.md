@@ -1,4 +1,4 @@
-# Lab 04a: On-Premises JML Lifecycle Automation (Active Directory)
+# Lab 02a: On-Premises JML Lifecycle Automation (Active Directory)
 
 ## 🎯 Objective
 Design and implement an automated Joiner-Mover-Leaver (JML) lifecycle workflow utilizing Windows Server Active Directory, Organizational Units (OUs), security groups, and automated identity management structures to mitigate insider threats and eliminate manual provisioning overhead.
